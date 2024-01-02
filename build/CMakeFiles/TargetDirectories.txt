@@ -1,3 +1,0 @@
-/home/marius/Downloads/NvidiaAIDenoiser/build/CMakeFiles/denoiser.dir
-/home/marius/Downloads/NvidiaAIDenoiser/build/CMakeFiles/edit_cache.dir
-/home/marius/Downloads/NvidiaAIDenoiser/build/CMakeFiles/rebuild_cache.dir

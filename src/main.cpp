@@ -210,6 +210,7 @@ int main(int argc, char *argv[])
     }
     PrintInfo("Launching Nvidia AI Denoiser command line app v%d.%d", DENOISER_MAJOR_VERSION, DENOISER_MINOR_VERSION);
     PrintInfo("Created by Declan Russell (25/12/2017 ~ Merry Christmas!)");
+    PrintInfo("Ported by Marius Werkmeister (02/01/2024 ~ Happy New year!)");
 
     if (!discoverDevices())
         exitfunc(EXIT_FAILURE);
