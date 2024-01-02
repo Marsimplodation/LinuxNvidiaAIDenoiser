@@ -1,3 +1,0 @@
-[submodule "3rdParty/OpenImageIO"]
-	path = 3rdParty/OpenImageIO
-	url = https://github.com/AcademySoftwareFoundation/OpenImageIO
