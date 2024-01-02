@@ -5,8 +5,8 @@
 #include <cuda_runtime.h>
 #include <iostream>
 #include <iomanip>
-#include "OpenImageIO\imageio.h"
-#include "OpenImageIO\imagebuf.h"
+#include <OpenImageIO/imageio.h>
+#include <OpenImageIO/imagebuf.h>
 #include <stdio.h>
 #include <exception>
 
@@ -16,10 +16,6 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-#ifdef _WIN32
-#include <windows.h>
-#include <winternl.h>
-#endif
 
 #define DENOISER_MAJOR_VERSION 3
 #define DENOISER_MINOR_VERSION 0
@@ -100,39 +96,11 @@ void PrintError(const char *c, Args... args)
     std::cerr<<getTime()<<" ERROR   | "<<buffer<<std::endl;
 }
 
-#ifdef _WIN32
-int getSysOpType()
-{
-    int ret = 0;
-    NTSTATUS(WINAPI *RtlGetVersion)(LPOSVERSIONINFOEXW);
-    OSVERSIONINFOEXW osInfo;
 
-    *(FARPROC*)&RtlGetVersion = GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
-
-    if (NULL != RtlGetVersion)
-    {
-        osInfo.dwOSVersionInfoSize = sizeof(osInfo);
-        RtlGetVersion(&osInfo);
-        ret = osInfo.dwMajorVersion;
-    }
-    return ret;
-}
-#endif
 
 void exitfunc(int exit_code)
 {
-#ifdef _WIN32
-    if (getSysOpType() < 10)
-    {
-        HANDLE tmpHandle = OpenProcess(PROCESS_ALL_ACCESS, TRUE, GetCurrentProcessId());
-        if (tmpHandle != NULL)
-        {
-            PrintInfo("terminating...");
-            std::this_thread::sleep_for(std::chrono::seconds(1)); // delay 1s
-            TerminateProcess(tmpHandle, 0);
-        }
-    }
-#endif
+
 	exit(exit_code);
 }
 
@@ -692,7 +660,7 @@ int main(int argc, char *argv[])
     OptixDenoiserParams denoiser_params = {};
     // TODO: Expose option for this
 #if OPTIX_VERSION >= 70600
-    denoiser_params.denoiseAlpha = OptixDenoiserAlphaMode(0);
+    denoiser_params.blendFactor = OptixDenoiserAlphaMode(0);
 #else
     denoiser_params.denoiseAlpha = 0;
 #endif
@@ -707,7 +675,7 @@ int main(int argc, char *argv[])
     for (auto& l : layers)
     {
         // Input
-        CU_CHECK(cudaMalloc(&((void*)l.input.data), sizeof(float) * 4 * b_width * b_height));
+        CU_CHECK(cudaMalloc(((void**)&l.input.data), sizeof(float) * 4 * b_width * b_height));
         l.input.width              = b_width;
         l.input.height             = b_height;
         l.input.rowStrideInBytes   = b_width * sizeof(float) * 4;
@@ -715,7 +683,7 @@ int main(int argc, char *argv[])
         l.input.format             = OPTIX_PIXEL_FORMAT_FLOAT4;
 
         // Output
-        CU_CHECK(cudaMalloc(&((void*)l.output.data), sizeof(float) * 4 * b_width * b_height));
+        CU_CHECK(cudaMalloc(((void**)&l.output.data), sizeof(float) * 4 * b_width * b_height));
         l.output.width              = b_width;
         l.output.height             = b_height;
         l.output.rowStrideInBytes   = b_width * sizeof(float) * 4;
@@ -727,7 +695,7 @@ int main(int argc, char *argv[])
     if (pi_loaded)
     {
         auto& l = layers[0];
-        CU_CHECK(cudaMalloc(&((void*)l.previousOutput.data), sizeof(float) * 4 * b_width * b_height));
+        CU_CHECK(cudaMalloc((void**)&l.previousOutput.data, sizeof(float) * 4 * b_width * b_height));
         l.previousOutput.width              = b_width;
         l.previousOutput.height             = b_height;
         l.previousOutput.rowStrideInBytes   = b_width * sizeof(float) * 4;
@@ -739,7 +707,7 @@ int main(int argc, char *argv[])
     // albedo
     if (a_loaded)
     {
-        CU_CHECK(cudaMalloc(&((void*)guide_layer.albedo.data), sizeof(float) * 4 * b_width * b_height));
+        CU_CHECK(cudaMalloc(((void**)&guide_layer.albedo.data), sizeof(float) * 4 * b_width * b_height));
         // guide_layer.albedo.data               = (CUdeviceptr)albedo_buffer;
         guide_layer.albedo.width              = a_width;
         guide_layer.albedo.height             = a_height;
@@ -751,7 +719,7 @@ int main(int argc, char *argv[])
     // normal
     if (n_loaded)
     {
-        CU_CHECK(cudaMalloc(&((void*)guide_layer.normal.data), sizeof(float) * 4 * b_width * b_height));
+        CU_CHECK(cudaMalloc(((void**)&guide_layer.normal.data), sizeof(float) * 4 * b_width * b_height));
         // guide_layer.normal.data               = (CUdeviceptr)normal_buffer;
         guide_layer.normal.width              = n_width;
         guide_layer.normal.height             = n_height;
@@ -763,7 +731,7 @@ int main(int argc, char *argv[])
     // motion vectors
     if (mv_loaded)
     {
-        CU_CHECK(cudaMalloc(&((void*)guide_layer.flow.data), sizeof(float) * 2 * b_width * b_height));
+        CU_CHECK(cudaMalloc(((void**)&guide_layer.flow.data), sizeof(float) * 2 * b_width * b_height));
         guide_layer.flow.width              = mv_width;
         guide_layer.flow.height             = mv_height;
         guide_layer.flow.rowStrideInBytes   = mv_width * sizeof(float) * 2;
