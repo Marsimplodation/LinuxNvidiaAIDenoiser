@@ -11,6 +11,9 @@ You will also need to Download Nvidia Optix and specify the install path in the 
   - make
 - your denoiser should now be build
 
+# Fixed deprecated things
+This port moves the project to Optix 8.0 (fixed using depcrecated fields) and c++17 (fixed some pointer stuff)
+
 ---
 # Original README
 
